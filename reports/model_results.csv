@@ -1,0 +1,6 @@
+Model,accuracy,recall,f1_score
+Logistic Regression,0.9058,0.973,0.9432
+k-NN,0.9565,0.973,0.973
+Random Forest,0.9565,0.9865,0.9733
+SVM,0.942,0.982,0.9646
+Gradient Boosting,0.9565,0.982,0.9732
