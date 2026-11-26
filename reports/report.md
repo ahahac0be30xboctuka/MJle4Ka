@@ -1,31 +1,31 @@
-# Binary screening results
+# Результаты бинарной классификации
 
-[Study overview](../README.md) · [Dataset and protocol](../docs/README.md)
+[Обзор исследования](../README.md) · [Данные и протокол](../docs/README.md)
 
-## Model comparison
+## Сравнение моделей
 
-The table reproduces the metrics in the committed CSV. Recall and F1 are for the positive class, which pools the five antibiotic categories.
+В таблице приведены метрики из сохранённого CSV. Полнота и F1 рассчитаны по положительному классу, в который входят пять категорий антибиотиков.
 
-| Model | Accuracy | Recall | F1 |
+| Модель | Доля верных ответов | Полнота | F1 |
 | :--- | ---: | ---: | ---: |
-| Random Forest | 0.9565 | **0.9865** | **0.9733** |
-| Gradient Boosting | 0.9565 | 0.9820 | 0.9732 |
-| k-Nearest Neighbors | 0.9565 | 0.9730 | 0.9730 |
-| SVM | 0.9420 | 0.9820 | 0.9646 |
-| Logistic Regression | 0.9058 | 0.9730 | 0.9432 |
+| Случайный лес | 0,9565 | **0,9865** | **0,9733** |
+| Градиентный бустинг | 0,9565 | 0,9820 | 0,9732 |
+| Метод ближайших соседей | 0,9565 | 0,9730 | 0,9730 |
+| SVM | 0,9420 | 0,9820 | 0,9646 |
+| Логистическая регрессия | 0,9058 | 0,9730 | 0,9432 |
 
-The top three models share the same reported accuracy. Their F1 scores differ by at most 0.0003 on this split. With 222 positives among 276 test measurements, an always-positive rule would score 0.892 F1 and flag all 54 milk controls. [Saved metrics CSV](model_results.csv)
+У трёх лучших моделей одинаковая доля правильных ответов. Их F1 на этом разбиении различается максимум на 0,0003. В тесте 222 положительных измерения из 276. Правило «всегда предсказывать положительный класс» дало бы F1 = 0,892 и ошибочно пометило бы все 54 контрольных измерения. [Сохранённый CSV с метриками](model_results.csv)
 
-## Random Forest diagnostics
+## Разбор ошибок случайного леса
 
-![Random Forest confusion matrix for the archived binary evaluation](figures/confusion_binary_Random_Forest.png)
+![Матрица ошибок случайного леса для бинарной классификации](figures/confusion_binary_Random_Forest.png)
 
-*Rows are observed classes and columns are predictions. Class 0 is the milk control and class 1 is the pooled antibiotic group.*
+*Строки соответствуют фактическим классам, столбцы — предсказаниям. Класс 0 — контрольное молоко, класс 1 объединяет пять категорий антибиотиков.*
 
-The model detected 219 of 222 positives (98.6% recall) and correctly cleared 45 of 54 controls (83.3% specificity). That leaves three missed positives and nine flagged controls at the recorded decision threshold.
+Модель обнаружила 219 из 222 положительных измерений (полнота 98,6 %) и правильно распознала 45 из 54 контрольных (специфичность 83,3 %). При использованном пороге получилось три пропуска и девять ложных срабатываний.
 
-[Saved ROC curve](figures/roc_binary_Random_Forest.png)
+[Сохранённая ROC-кривая](figures/roc_binary_Random_Forest.png)
 
-## Interpretation
+## Интерпретация
 
-The results show that the sampled current profiles carry signal for the binary labels within this dataset. A screening workflow would need to trade off missed positives against false alarms on independently collected samples and report how that balance changes with concentration. The information needed to establish a detection limit or validate a field decision threshold is outside the archived evaluation.
+Вольтамперограммы содержат сигнал, по которому модель различает два класса в этом наборе. Перед применением для скрининга нужно измерить частоту пропусков и ложных срабатываний на независимо собранных образцах и проверить, как она меняется с концентрацией. Определение предела обнаружения и проверка порога для практической работы требуют отдельной оценки.

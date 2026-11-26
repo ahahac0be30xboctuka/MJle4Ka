@@ -1,41 +1,41 @@
-# Dataset and evaluation protocol
+# Данные и протокол оценки
 
-[Study overview](../README.md) · [Archived results](../reports/report.md)
+[Обзор исследования](../README.md) · [Сохранённые результаты](../reports/report.md)
 
-## Measurements
+## Измерения
 
-The project includes exported instrument measurements in `data/raw/` and a tabular version in `data/processed/processed_data.csv`. Each processed row represents a voltammogram. Its 521 input columns correspond to voltage positions, with current in amperes as the measured value.
+Выгрузки с прибора находятся в `data/raw/`, обработанная таблица — в `data/processed/processed_data.csv`. Каждая строка таблицы соответствует одному измерению. В 521 столбце признаков записаны значения тока в амперах при заданных напряжениях.
 
-| Recorded category | Measurements |
+| Категория измерения | Количество |
 | :--- | ---: |
-| Milk control | 270 |
-| Cefazoline | 225 |
-| Ceftiofur | 225 |
-| Penicillin | 225 |
-| Streptomycin | 207 |
-| Tetracycline | 225 |
-| **Total** | **1,377** |
+| Контрольное молоко | 270 |
+| Цефазолин | 225 |
+| Цефтиофур | 225 |
+| Пенициллин | 225 |
+| Стрептомицин | 207 |
+| Тетрациклин | 225 |
+| **Всего** | **1 377** |
 
-The loader uses the voltage grid of the first eligible trace and reads the category and concentration from the raw filename. The preprocessing step drops incomplete rows. The packaged table records the curve, category and concentration. Batch, sample and instrument identifiers, concentration units and an acquisition protocol are undocumented in the repository. [Raw data](../data/raw/) · [Loader](../src/data/load_data.py) · [Preprocessing](../src/data/process_data.py)
+Загрузчик берёт сетку напряжений из первой подходящей кривой, а категорию и концентрацию извлекает из имени исходного CSV. При предобработке удаляются неполные строки. Готовая таблица содержит кривую, категорию и концентрацию. Идентификаторы образцов, серий и приборов, единицы концентрации и протокол снятия измерений в репозитории не задокументированы. [Исходные данные](../data/raw/) · [Загрузчик](../src/data/load_data.py) · [Предобработка](../src/data/process_data.py)
 
-## Evaluation protocol
+## Протокол оценки
 
-1. **Define the target.** Milk control is class 0. The five antibiotic categories are pooled into class 1, accounting for 1,107 of 1,377 measurements.
-2. **Split by measurement.** The binary CLI defaults to an 80/20 stratified split with seed 42. It drops both the category and concentration columns from the features.
-3. **Compare classifiers.** Logistic regression, k-nearest neighbors, Random Forest, SVM and gradient boosting use the current vectors. The final fit uses a scaler fitted on training rows. If `--tune` is used, the current implementation scales the training partition before grid-search folds are formed.
-4. **Report the saved metrics.** Accuracy, recall and F1 are computed on the held-out rows. Recall and F1 treat the antibiotic group as positive. The CLI selects the highest test-set F1 for its saved diagnostic plots.
+1. **Целевая переменная.** Контрольное молоко — класс 0. Пять категорий антибиотиков объединены в класс 1, к которому относятся 1 107 из 1 377 измерений.
+2. **Разбиение по измерениям.** Бинарная команда по умолчанию использует стратифицированное разбиение 80/20 с `random_state=42`. Категория и концентрация исключаются из признаков.
+3. **Сравнение классификаторов.** По векторам тока обучаются логистическая регрессия, метод ближайших соседей, случайный лес, SVM и градиентный бустинг. Для итогового обучения параметры масштабирования рассчитываются на обучающей выборке. С флагом `--tune` обучающая выборка масштабируется до разбиения на фолды для поиска гиперпараметров.
+4. **Метрики.** Доля верных ответов, полнота и F1 рассчитываются на отложенных измерениях. Полнота и F1 относятся к положительному классу. Модель для итоговых графиков выбирается по максимальному F1 на тесте.
 
-This split estimates discrimination among rows in the packaged dataset and also serves to rank the models. It leaves generalization to new physical samples, acquisition batches and concentrations unmeasured. For an independent evaluation, identify the physical sample or acquisition batch, keep those groups intact across folds, fit preprocessing inside each fold and reserve separate groups for final evaluation. [CLI implementation](../main.py) · [Model fitting and scoring](../src/models/train.py)
+Это разбиение используется для оценки различимости классов внутри набора и ранжирования моделей. Переносимость на новые физические образцы, серии измерений и концентрации требует отдельной проверки. Для независимой оценки нужно сгруппировать измерения по образцу или серии, сохранять группы целиком в одном фолде, подбирать параметры предобработки внутри каждого фолда и отложить отдельные группы для финального теста. [Код пайплайна](../main.py) · [Обучение и расчёт метрик](../src/models/train.py)
 
-## Running from the repository root
+## Команды запуска
 
-See the [project README](../README.md#run-the-analysis) for Python dependencies.
+Команды выполняются из корня репозитория. Зависимости перечислены в [инструкции запуска](../README.md#запуск-анализа).
 
-| Command | Input and output |
+| Команда | Входные данные и результат |
 | :--- | :--- |
-| `python main.py collect` | Reads the instrument CSVs under `data/raw/` and writes the processed feature table. If the included default archive exists, the command extracts it first. |
-| `python main.py analyze` | Reads the processed table and writes class counts and example traces. |
-| `python main.py train_binary` | Fits five binary classifiers and writes a metrics CSV, a confusion matrix and a ROC curve for the model with the highest F1. |
-| `python main.py train_multiclass` | Runs the separate category prediction path. The archived results page reports the binary run. |
+| `python main.py collect` | Читает CSV с прибора из `data/raw/` и записывает таблицу признаков. Если в каталоге есть архив по умолчанию, команда сначала распаковывает его. |
+| `python main.py analyze` | Читает обработанную таблицу и сохраняет распределение классов и примеры вольтамперограмм. |
+| `python main.py train_binary` | Обучает пять бинарных классификаторов, сохраняет метрики и строит матрицу ошибок и ROC-кривую модели с наибольшим F1. |
+| `python main.py train_multiclass` | Запускает отдельную задачу классификации по исходным категориям. Сохранённый отчёт описывает бинарный эксперимент. |
 
-Run from a separate checkout to preserve the committed outputs for comparison. Training commands write to the same metrics path.
+Для сравнения с результатами из репозитория запускай анализ в отдельной копии. Обе команды обучения записывают метрики в один и тот же файл.

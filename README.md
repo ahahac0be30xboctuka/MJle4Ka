@@ -1,34 +1,34 @@
-# Antibiotic screening in milk with voltammetry
+# Выявление антибиотиков в молоке по вольтамперограммам
 
-An independent applied machine learning study of electrochemical measurements. **Can a current–voltage curve distinguish milk measurements associated with an antibiotic from milk controls?** I built a pipeline that turns instrument CSVs into a common feature table, compares five classifiers and exports diagnostic plots.
+Самостоятельное исследование по прикладному машинному обучению на электрохимических данных. **Можно ли по зависимости тока от напряжения отличить измерения, относящиеся к антибиотикам, от контрольных измерений молока?** Я собрал пайплайн, который преобразует CSV с прибора в общую таблицу признаков, сравнивает пять классификаторов и сохраняет диагностические графики.
 
-[Dataset and protocol](docs/README.md) · [Results and error analysis](reports/report.md) · [Command-line pipeline](main.py)
+[Данные и протокол](docs/README.md) · [Результаты и разбор ошибок](reports/report.md) · [Пайплайн командной строки](main.py)
 
-## Study at a glance
+## Исследование в цифрах
 
-| Dataset | Model input | Main task |
+| Данные | Вход модели | Основная задача |
 | :--- | :--- | :--- |
-| **1,377** voltammograms, including **270** milk controls | **521** current readings indexed by voltage | Binary classification across **five** antibiotic categories and milk controls |
+| **1 377** вольтамперограмм, из них **270** контрольных | **521** значение тока при заданных напряжениях | Бинарная классификация измерений для **пяти** антибиотиков и контрольного молока |
 
-The signal enters the model as a sampled current–voltage curve. Antibiotic identity supplies the label. The recorded concentration is kept in the data table and excluded from the feature matrix. [Data loader](src/data/load_data.py) · [Binary task](main.py#L69-L85)
+Модель получает набор значений тока, снятых в точках вольтамперограммы. Метка формируется по категории измерения. Концентрация хранится в исходной таблице и исключается из матрицы признаков. [Загрузка данных](src/data/load_data.py) · [Бинарная задача](main.py#L69-L85)
 
-![Example current–voltage trace from the milk control category](reports/figures/VA_graphs/milk_VA.png)
+![Пример вольтамперограммы контрольного молока](reports/figures/VA_graphs/milk_VA.png)
 
-*An example milk-control voltammogram from the exploratory analysis. The model receives the sampled current values.*
+*Пример вольтамперограммы из контрольной группы. В модель подаются дискретные значения тока.*
 
-## What the experiment found
+## Что показал эксперимент
 
-On the recorded stratified row-level split, **Random Forest reached 0.973 positive-class F1** and flagged **219 of 222** antibiotic-group measurements. It also flagged **9 of 54** milk controls. Gradient boosting and k-nearest neighbors achieved nearly the same F1. [Full comparison and confusion matrix](reports/report.md)
+На сохранённом стратифицированном разбиении по отдельным измерениям **случайный лес получил F1 = 0,973 по положительному классу** и обнаружил **219 из 222** положительных измерений. Модель также ошибочно пометила **9 из 54** контролей. Градиентный бустинг и метод ближайших соседей показали близкий F1. [Сравнение моделей и матрица ошибок](reports/report.md)
 
-The evaluation is exploratory. The dataset contains several concentrations per antibiotic, and the processed table lacks batch or sample identifiers. Related measurements could therefore share a train/test split. The current script also ranks models on that same split. Performance on new batches remains an open question. [Evaluation design and follow-up test](docs/README.md#evaluation-protocol)
+Оценка носит разведочный характер. Для каждого антибиотика есть несколько концентраций, а в обработанной таблице отсутствуют идентификаторы образцов и серий. Связанные измерения могли попасть в обе части разбиения. Тот же тест используется для ранжирования моделей. Качество на новых сериях остаётся открытым вопросом. [Протокол оценки и план независимой проверки](docs/README.md#протокол-оценки)
 
-## Run the analysis
+## Запуск анализа
 
-From the repository root, install the Python dependencies in an isolated environment and use the included processed CSV to run the binary comparison.
+Из корня репозитория установи зависимости в отдельном Python-окружении и запусти бинарную классификацию на готовом CSV.
 
 ```bash
 python -m pip install numpy pandas scikit-learn matplotlib termcolor tabulate
 python main.py train_binary
 ```
 
-The command writes the metrics table and diagnostic figures under `reports/`. The repository also includes raw-data collection, signal visualization and a multiclass entry point. [Inputs, commands and output files](docs/README.md#running-from-the-repository-root)
+Команда записывает таблицу метрик и диагностические графики в `reports/`. В репозитории также есть команды для обработки исходных измерений, визуализации сигналов и многоклассовой классификации. [Входные данные, команды и результаты](docs/README.md#команды-запуска)
